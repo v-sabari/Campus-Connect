@@ -13,17 +13,15 @@ import React, { useEffect, useRef, useState } from "react";
 function CustomCursor() {
   const dotRef = useRef(null);
   const ringRef = useRef(null);
-  const [enabled, setEnabled] = useState(false);
-
-  useEffect(() => {
+  const [enabled] = useState(() => {
+    if (typeof window === "undefined") return false;
     const isTouch = window.matchMedia("(pointer: coarse)").matches;
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    return !(isTouch || prefersReducedMotion);
+  });
 
-    if (isTouch || prefersReducedMotion) {
-      setEnabled(false);
-      return;
-    }
-    setEnabled(true);
+  useEffect(() => {
+    if (!enabled) return;
 
     let ringX = 0, ringY = 0;
     let targetX = 0, targetY = 0;
@@ -64,7 +62,7 @@ function CustomCursor() {
       window.removeEventListener("mouseover", handleOver);
       cancelAnimationFrame(rafId);
     };
-  }, []);
+  }, [enabled]);
 
   if (!enabled) return null;
 

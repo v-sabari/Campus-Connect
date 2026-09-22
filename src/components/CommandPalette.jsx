@@ -60,12 +60,11 @@ export default function CommandPalette() {
   const [idx, setIdx] = useState(0);
   const inputRef = useRef(null);
 
-  const session = useMemo(() => ({
-    loggedIn: auth.isLoggedIn(),
-    role: (typeof window !== "undefined" && localStorage.getItem("role")) || "",
-  }), [open]);
+  const loggedIn = auth.isLoggedIn();
+  const role = (typeof window !== "undefined" && localStorage.getItem("role")) || "";
 
   const results = useMemo(() => {
+    const session = { loggedIn, role };
     return ALL_COMMANDS
       .filter((c) => !c.when || c.when(session))
       .map((c) => ({ c, s: score(c, q) }))
@@ -73,7 +72,7 @@ export default function CommandPalette() {
       .sort((a, b) => b.s - a.s)
       .slice(0, 12)
       .map((r) => r.c);
-  }, [q, session]);
+  }, [q, loggedIn, role]);
 
   useEffect(() => {
     const onKey = (e) => {
@@ -81,10 +80,11 @@ export default function CommandPalette() {
       if (mod && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setOpen((v) => !v);
+        setIdx(0);
         return;
       }
       if (!open) return;
-      if (e.key === "Escape") { e.preventDefault(); setOpen(false); }
+      if (e.key === "Escape") { e.preventDefault(); setOpen(false); setIdx(0); }
       if (e.key === "ArrowDown") { e.preventDefault(); setIdx((i) => Math.min(i + 1, results.length - 1)); }
       if (e.key === "ArrowUp")   { e.preventDefault(); setIdx((i) => Math.max(i - 1, 0)); }
       if (e.key === "Enter" && results[idx]) {
@@ -99,7 +99,6 @@ export default function CommandPalette() {
   }, [open, results, idx, navigate]);
 
   useEffect(() => { if (open) setTimeout(() => inputRef.current?.focus(), 10); }, [open]);
-  useEffect(() => { setIdx(0); }, [q, open]);
 
   if (!open) return null;
 
@@ -119,7 +118,7 @@ export default function CommandPalette() {
             className="qw-cmdk-input"
             placeholder="Search pages…  (Esc to close)"
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => { setQ(e.target.value); setIdx(0); }}
           />
           <kbd className="qw-cmdk-kbd">Esc</kbd>
         </div>

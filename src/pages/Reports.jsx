@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api, { apiErrorMessage } from "../services/api";
+import api from "../services/api";
 import "./Dashboard.css";
 
 function Reports() {
@@ -19,7 +19,8 @@ function Reports() {
   // App.jsx, allowedRoles=["SUPER_ADMIN", "FACULTY_COORDINATOR", "HOD"]).
 
   useEffect(() => {
-    Promise.all([
+    const setFrom = (setter) => (res) => setter(res?.data?.data);
+    Promise.allSettled([
       api.get("/api/reports/department-wise-events"),
       api.get("/api/reports/category-wise-events"),
       api.get("/api/reports/attendance"),
@@ -27,17 +28,25 @@ function Reports() {
       api.get("/api/reports/feedback-analysis"),
       api.get("/api/reports/most-active-department"),
       api.get("/api/reports/most-active-student"),
-    ])
-      .then(([d, c, a, r, f, td, ts]) => {
-        setDeptWise(d.data.data);
-        setCatWise(c.data.data);
-        setAttendance(a.data.data);
-        setRegistrations(r.data.data);
-        setFeedback(f.data.data);
-        setTopDept(td.data.data);
-        setTopStudent(ts.data.data);
-      })
-      .catch((err) => setError(apiErrorMessage(err, "Could not load reports.")));
+    ]).then((results) => {
+      const [dept, cat, att, reg, fb, topDeptRes, topStudentRes] = results;
+      const setters = [
+        [dept, setDeptWise],
+        [cat, setCatWise],
+        [att, setAttendance],
+        [reg, setRegistrations],
+        [fb, setFeedback],
+        [topDeptRes, setTopDept],
+        [topStudentRes, setTopStudent],
+      ];
+      const failed = setters.filter(([result]) => result.status === "rejected");
+      setters.forEach(([result, setter]) => {
+        if (result.status === "fulfilled") setFrom(setter)(result.value);
+      });
+      if (failed.length > 0) {
+        setError(`Could not load ${failed.length} of ${setters.length} reports.`);
+      }
+    });
   }, []);
 
   return (

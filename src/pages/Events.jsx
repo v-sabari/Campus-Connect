@@ -5,6 +5,8 @@ import Footer from "../components/Footer";
 import api from "../services/api";
 
 // Search & Filters module: Event Name, Department, Category, Venue, Date.
+const EMPTY_FILTERS = { name: "", departmentId: "", categoryId: "", venueId: "", date: "" };
+
 function Events() {
 
   const [events, setEvents] = useState([]);
@@ -12,13 +14,7 @@ function Events() {
   const [categories, setCategories] = useState([]);
   const [venues, setVenues] = useState([]);
 
-  const [filters, setFilters] = useState({
-    name: "",
-    departmentId: "",
-    categoryId: "",
-    venueId: "",
-    date: "",
-  });
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
 
   useEffect(() => {
     // BE-17: these three populate filter <select> dropdowns (not tables),
@@ -31,11 +27,12 @@ function Events() {
     api.get("/api/venues", { params: { size: LOOKUP_SIZE } }).then((res) => setVenues(res.data.data.content)).catch(() => {});
   }, []);
 
-  const loadEvents = () => {
-    const hasFilters = Object.values(filters).some((v) => v !== "");
+  const loadEvents = (filtersToUse) => {
+    const activeFilters = filtersToUse ?? filters;
+    const hasFilters = Object.values(activeFilters).some((v) => v !== "");
     const url = hasFilters ? "/api/events/search" : "/api/events/published";
     const params = hasFilters
-      ? Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== ""))
+      ? Object.fromEntries(Object.entries(activeFilters).filter(([, v]) => v !== ""))
       : {};
 
     api.get(url, { params })
@@ -58,8 +55,8 @@ function Events() {
   };
 
   const clearFilters = () => {
-    setFilters({ name: "", departmentId: "", categoryId: "", venueId: "", date: "" });
-    setTimeout(loadEvents, 0);
+    setFilters(EMPTY_FILTERS);
+    loadEvents(EMPTY_FILTERS);
   };
 
   return (

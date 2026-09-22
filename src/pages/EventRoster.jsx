@@ -33,7 +33,15 @@ function EventRoster() {
   };
 
   useEffect(() => {
-    load();
+    let active = true;
+    api.get(`/api/events/${id}/registrations`)
+      .then((res) => {
+        if (active) setRegistrations(res.data.data);
+      })
+      .catch((err) => {
+        if (active) setError(apiErrorMessage(err, "Could not load the registration roster."));
+      });
+    return () => { active = false; };
   }, [id]);
 
   const handleScan = async (e) => {

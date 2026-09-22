@@ -18,7 +18,15 @@ function Notifications() {
   };
 
   useEffect(() => {
-    load();
+    let active = true;
+    api.get("/api/notifications?size=50")
+      .then((res) => {
+        if (active) setNotifications(res.data.data.content);
+      })
+      .catch((err) => {
+        if (active) setError(apiErrorMessage(err, "Could not load notifications."));
+      });
+    return () => { active = false; };
   }, []);
 
   const markRead = async (id) => {
