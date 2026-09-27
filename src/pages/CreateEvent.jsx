@@ -3,6 +3,18 @@ import { useNavigate, useParams } from "react-router-dom";
 import api, { apiErrorMessage } from "../services/api";
 import "./Dashboard.css";
 
+// e.startTime etc. come back from the backend as ISO-8601 instants in UTC.
+// A datetime-local input needs a *local* wall-clock string - blindly taking
+// substring(0, 16) of the UTC instant shifts every time by the browser's
+// timezone offset whenever a draft is opened for editing.
+const pad = (n) => String(n).padStart(2, "0");
+const toLocalInput = (isoString) => {
+  if (!isoString) return "";
+  const d = new Date(isoString);
+  if (Number.isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+};
+
 // Reused for both creating a brand new draft and editing an existing
 // draft/rejected event - Phase 1 flagged this page as orphaned and
 // duplicating logic already in FacultyDashboard; it is now the single
@@ -86,9 +98,6 @@ function CreateEvent() {
     }
   }, [id]);
 
-  const toLocalInput = (isoString) =>
-    isoString ? isoString.substring(0, 16) : "";
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -121,7 +130,10 @@ function CreateEvent() {
       } else {
         await api.post("/api/events", payload);
       }
-      navigate("/organizer");
+      // /organizer is STUDENT_ORGANIZER-only, but this page also serves
+      // SUPER_ADMIN (see the allowedRoles on /edit-event/:id in App.jsx) -
+      // /dashboard dispatches to the correct per-role home for both.
+      navigate("/dashboard");
     } catch (err) {
       setError(apiErrorMessage(err, "Could not save the event draft."));
     } finally {
@@ -196,7 +208,7 @@ function CreateEvent() {
           <button type="submit" disabled={saving}>
             {saving ? "Saving..." : id ? "Save Changes" : "Create Draft"}
           </button>
-          <button type="button" className="secondary" onClick={() => navigate("/organizer")}>
+          <button type="button" className="secondary" onClick={() => navigate("/dashboard")}>
             Cancel
           </button>
         </div>

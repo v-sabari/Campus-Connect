@@ -5,6 +5,12 @@ import "./Dashboard.css";
 
 const ROLES = ["STUDENT", "STUDENT_ORGANIZER", "FACULTY_COORDINATOR", "HOD", "SUPER_ADMIN"];
 
+// A FACULTY_COORDINATOR may only provision student accounts - the backend
+// (UserServiceImpl.register) rejects coordinator attempts to grant
+// FACULTY_COORDINATOR/HOD/SUPER_ADMIN with a 403, so the "Create User" form
+// only offers roles this actor is actually allowed to assign.
+const ASSIGNABLE_ROLES = ["STUDENT", "STUDENT_ORGANIZER"];
+
 const emptyForm = { regNumber: "", name: "", email: "", password: "", role: "STUDENT", departmentId: "" };
 const PAGE_SIZE = 20;
 // BE-17: the department dropdown on the "Create User" form needs the full
@@ -138,7 +144,7 @@ function UserManagement() {
         />
         <label>Role</label>
         <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-          {ROLES.map((r) => (
+          {(isSuperAdmin ? ROLES : ASSIGNABLE_ROLES).map((r) => (
             <option key={r} value={r}>{r}</option>
           ))}
         </select>
