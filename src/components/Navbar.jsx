@@ -16,13 +16,21 @@ function Navbar() {
     .join("") || "U";
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef(null);
+  const navRef = useRef(null);
 
   useEffect(() => {
     const onDoc = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+      if (navRef.current && !navRef.current.contains(e.target)) setMobileOpen(false);
     };
-    const onKey = (e) => e.key === "Escape" && setMenuOpen(false);
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        setMenuOpen(false);
+        setMobileOpen(false);
+      }
+    };
     document.addEventListener("mousedown", onDoc);
     document.addEventListener("keydown", onKey);
     return () => {
@@ -33,18 +41,32 @@ function Navbar() {
 
   const logout = () => {
     setMenuOpen(false);
+    setMobileOpen(false);
     auth.clearSession();
     navigate("/login");
   };
 
   return (
-    <nav className="navbar">
+    <nav className="navbar" ref={navRef}>
       <div className="logo-wrap">
         <img src="/favicon.ico" alt="Campus Connect logo" className="logo-icon" />
         <h1 className="logo">Campus Connect</h1>
       </div>
 
-      <div className="nav-links">
+      <button
+        type="button"
+        className="nav-toggle"
+        aria-label="Toggle navigation menu"
+        aria-expanded={mobileOpen}
+        onClick={() => setMobileOpen((v) => !v)}
+      >
+        {mobileOpen ? "✕" : "☰"}
+      </button>
+
+      <div
+        className={mobileOpen ? "nav-links mobile-open" : "nav-links"}
+        onClick={() => setMobileOpen(false)}
+      >
         <Link to="/">Home</Link>
         <Link to="/events">Events</Link>
         <Link to="/calendar">Calendar</Link>
@@ -96,9 +118,20 @@ function Navbar() {
                 </div>
               )}
             </div>
+
+            <div className="nav-mobile-footer">
+              <div className="nav-mobile-profile">
+                <span className="nav-mobile-initials">{initials}</span>
+                <div className="nav-mobile-id">
+                  <span className="nav-mobile-name">{name || "Account"}</span>
+                  <span className="nav-mobile-role">{role.replace(/_/g, " ")}</span>
+                </div>
+              </div>
+              <button type="button" className="nav-mobile-logout" onClick={logout}>Log out</button>
+            </div>
           </>
         ) : (
-          <Link to="/login">Login</Link>
+          <Link to="/login" className="nav-cta">Login</Link>
         )}
       </div>
     </nav>

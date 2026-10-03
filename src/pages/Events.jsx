@@ -3,6 +3,7 @@ import EventCard from "../components/EventCard";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import api from "../services/api";
+import "./Dashboard.css";
 
 // Search & Filters module: Event Name, Department, Category, Venue, Date.
 const EMPTY_FILTERS = { name: "", departmentId: "", categoryId: "", venueId: "", date: "" };

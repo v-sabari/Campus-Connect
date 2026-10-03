@@ -285,7 +285,27 @@ table button:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed
   .sidebar { width: 260px; }
   .table-container { overflow-x: auto; }
   .dashboard-main { padding: 20px 16px; }
-  .topbar { padding: 0 14px; }
+  .topbar { padding: 0 10px; }
+  .topbar h2 {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-left: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 16px;
+  }
+  input, textarea, select,
+  .form-card input, .form-card select, .form-card textarea,
+  .login-field input { font-size: 16px; }
+}
+
+@media (max-width: 480px) {
+  .topbar::before { display: none; }
+  .dashboard-main h1 { font-size: 22px; }
+  .F form.L { padding: 32px 22px; }
+  .qr-modal { padding: 20px; }
+  .qr-modal img { width: 100%; max-width: 240px; height: auto; }
 }
 
 @media (min-width: 769px) {
